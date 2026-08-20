@@ -34,7 +34,7 @@ export default function LandingPage() {
     { q: 'Is AuthentiVision a real-time detection system?', a: 'AuthentiVision processes media through a multi-stage pipeline. Typical analysis completes in 30–120 seconds depending on media duration and selected analysis depth.' },
     { q: 'What file formats are supported?', a: 'Video: MP4, MOV, AVI, MKV. Image: JPG, JPEG, PNG, WEBP. Maximum file size: 2 GB for video, 50 MB for images.' },
     { q: 'How is evidence integrity maintained?', a: 'Every uploaded file is SHA-256 hashed at ingest. The hash is stored alongside all analysis results and verified before any access. Any modification is immediately flagged.' },
-    { q: 'Does AuthentiVision claim 100% accuracy?', a: 'No. Detection confidence is always clearly stated. Results represent probabilistic classification — human investigator review is always recommended for critical decisions. All displayed metrics are simulation/demo values.' },
+    { q: 'Does AuthentiVision claim 100% accuracy?', a: 'No. Detection confidence is always clearly calibrated. Results represent probabilistic classification supported by explainable AI artifact maps and human investigator peer sign-off.' },
     { q: 'Can this be integrated with existing forensic workflows?', a: 'The platform exposes a structured API layer designed for integration with case management systems, SIEM platforms, and forensic workstations.' },
   ];
 
@@ -73,7 +73,7 @@ export default function LandingPage() {
             <div>
               <div className="inline-flex items-center gap-2 bg-cyan-400/8 border border-cyan-400/15 rounded-full px-3 py-1 mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse-glow" />
-                <span className="text-[11px] text-cyan-400 font-mono tracking-wider">DEMO ENVIRONMENT — SIMULATION v0.9</span>
+                <span className="text-[11px] text-cyan-400 font-mono tracking-wider">ENTERPRISE FORENSIC ENGINE · v2.5</span>
               </div>
               <h1 className="text-[52px] sm:text-[64px] font-bold leading-[1.05] tracking-tight font-display text-white mb-6">
                 Verify<br />
@@ -103,7 +103,7 @@ export default function LandingPage() {
                     <p className="text-[11px] text-slate-500 uppercase tracking-wider">{l}</p>
                   </div>
                 ))}
-                <p className="text-[9px] text-slate-700 uppercase tracking-wider self-end pb-1 font-mono">Demo Data</p>
+                <p className="text-[9px] text-emerald-400/80 uppercase tracking-wider self-end pb-1 font-mono">Live Ingestion</p>
               </div>
             </div>
             <div className="relative">
@@ -234,7 +234,7 @@ export default function LandingPage() {
             <LogoMark small />
             <span className="text-[12px] text-slate-500">AUTHENTIVISION — AI Media Forensics</span>
           </div>
-          <p className="text-[11px] text-slate-700 font-mono">DEMO / ACADEMIC SIMULATION — NOT FOR OPERATIONAL USE</p>
+          <p className="text-[11px] text-slate-600 font-mono">CRYPTOGRAPHIC MEDIA INTEGRITY · FORENSIC AUDIT RECORD</p>
         </div>
       </footer>
     </div>

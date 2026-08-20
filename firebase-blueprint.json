@@ -1,0 +1,178 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access control and organizational metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "displayName": { "type": "string", "maxLength": 100, "description": "Full display name" },
+        "role": { "type": "string", "enum": ["ADMIN", "INVESTIGATOR", "ANALYST", "REVIEWER"], "description": "Security access tier" },
+        "organizationId": { "type": "string", "maxLength": 64, "description": "Assigned organization identifier" },
+        "organizationName": { "type": "string", "maxLength": 128, "description": "Organization agency name" },
+        "badgeNumber": { "type": "string", "maxLength": 32, "description": "Official badge or operator code" },
+        "photoURL": { "type": "string", "description": "Avatar URL" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "lastLoginAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role"]
+    },
+    "Analysis": {
+      "title": "Analysis",
+      "description": "Comprehensive multimodal forensic analysis result with verdict, confidence, and signal tensors",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique analysis record identifier" },
+        "userId": { "type": "string", "description": "User who initiated or owns the analysis" },
+        "caseId": { "type": "string", "description": "Associated investigative case" },
+        "filename": { "type": "string", "maxLength": 255, "description": "Original file name" },
+        "kind": { "type": "string", "enum": ["video", "image"], "description": "Media type" },
+        "verdict": { "type": "string", "enum": ["authentic", "deepfake", "morph", "suspicious", "inconclusive"], "description": "Detection classification" },
+        "confidence": { "type": "number", "description": "Calibrated model confidence percentage (0-100)" },
+        "uncertainty": { "type": "number", "description": "Model uncertainty margin" },
+        "quality": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW", "INSUFFICIENT"] },
+        "risk": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "status": { "type": "string", "enum": ["queued", "processing", "analyzing", "complete", "failed", "cancelled"] },
+        "analyzedAt": { "type": "string", "format": "date-time" },
+        "analyst": { "type": "string", "maxLength": 100 },
+        "imageUrl": { "type": "string", "description": "Media storage URL or preview reference" },
+        "sha256": { "type": "string", "maxLength": 64, "description": "Cryptographic file hash" },
+        "sizeMb": { "type": "number", "description": "File size in megabytes" },
+        "model": { "type": "string", "description": "Inference model ensemble description" },
+        "narrativeExplanation": { "type": "string", "description": "AI explainability narrative" },
+        "signals": { "type": "array", "description": "Structured forensic detector signal outputs" },
+        "timeline": { "type": "array", "description": "Video frame keyframe anomaly timeline" },
+        "humanReview": { "type": "object", "description": "Human examiner peer review record" },
+        "feedback": { "type": "object", "description": "Analyst feedback on result accuracy" },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "filename", "kind", "verdict", "confidence", "status"]
+    },
+    "Evidence": {
+      "title": "Evidence",
+      "description": "Cryptographically hashed and vaulted forensic evidence media artifact",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique evidence ID (EV-XXXXX)" },
+        "filename": { "type": "string", "maxLength": 255 },
+        "kind": { "type": "string", "enum": ["video", "image"] },
+        "sha256": { "type": "string", "maxLength": 64 },
+        "sha1": { "type": "string", "maxLength": 40 },
+        "md5": { "type": "string", "maxLength": 32 },
+        "sizeMb": { "type": "number" },
+        "caseId": { "type": "string" },
+        "analysisId": { "type": "string" },
+        "userId": { "type": "string" },
+        "storagePath": { "type": "string" },
+        "downloadUrl": { "type": "string" },
+        "previewUrl": { "type": "string" },
+        "addedAt": { "type": "string", "format": "date-time" },
+        "integrity": { "type": "string", "enum": ["verified", "tampered", "unverified"] },
+        "status": { "type": "string", "enum": ["vaulted", "in-analysis", "archived", "flagged"] },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "filename", "kind", "sha256", "sizeMb", "caseId"]
+    },
+    "Case": {
+      "title": "Case",
+      "description": "Investigative docket containing evidence, analyses, and findings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string" },
+        "investigator": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "status": { "type": "string", "enum": ["open", "closed", "in-review"] },
+        "evidenceCount": { "type": "number" },
+        "findings": { "type": "array" },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "name", "status"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Exported formal forensic assessment document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "analysisId": { "type": "string" },
+        "caseId": { "type": "string" },
+        "title": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "format": { "type": "string", "enum": ["PDF", "JSON", "CSV"] },
+        "author": { "type": "string" },
+        "verdict": { "type": "string" },
+        "organizationId": { "type": "string" }
+      },
+      "required": ["id", "analysisId", "generatedAt", "format"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security and operational event log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "at": { "type": "string", "format": "date-time" },
+        "actor": { "type": "string" },
+        "action": { "type": "string" },
+        "resource": { "type": "string" },
+        "caseId": { "type": "string" },
+        "evidenceId": { "type": "string" },
+        "device": { "type": "string" },
+        "result": { "type": "string", "enum": ["success", "warning", "denied"] },
+        "organizationId": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "at", "actor", "action", "resource", "result"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User / analyst evaluation on model performance for continuous model alignment",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "analysisId": { "type": "string" },
+        "correct": { "type": "boolean" },
+        "comments": { "type": "string" },
+        "submittedBy": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "analysisId", "correct", "submittedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile records with role and agency details"
+    },
+    "/analyses/{analysisId}": {
+      "schema": "Analysis",
+      "description": "Forensic detection results and calibrated signal tensors"
+    },
+    "/evidence/{evidenceId}": {
+      "schema": "Evidence",
+      "description": "Media evidence items vaulted with SHA-256 integrity"
+    },
+    "/cases/{caseId}": {
+      "schema": "Case",
+      "description": "Investigative cases grouping media and analyses"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Generated formal forensic PDF/JSON reports"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Immutable tamper-proof operational audit stream"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "Analyst feedback for forensic validation"
+    }
+  }
+}

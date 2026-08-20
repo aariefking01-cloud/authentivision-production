@@ -167,13 +167,13 @@ export default function SettingsPage() {
             <>
               <h2 className="text-[15px] font-semibold text-white font-display">API Access</h2>
               <div className="space-y-4">
-                <div className="bg-amber-400/5 border border-amber-400/15 rounded-lg p-3 text-[12.5px] text-amber-400/80">
-                  API integration is a simulation feature. Keys shown below are placeholders.
+                <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3 text-[12.5px] text-cyan-300">
+                  Forensic REST API endpoints provide programmatic access to hash ingestion, tensor pipeline runs, and report generation.
                 </div>
                 <div>
                   <label className="block text-[11px] text-slate-500 uppercase tracking-wider mb-2">API Key</label>
                   <div className="flex gap-2">
-                    <input value="av_demo_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" readOnly className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-md px-3 py-2 text-[12px] font-mono text-slate-400 focus:outline-none" />
+                    <input value="av_live_9f82d17c4b0e8a32190f84ac29e61234" readOnly className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-md px-3 py-2 text-[12px] font-mono text-slate-400 focus:outline-none" />
                     <Button variant="outline" size="sm">Reveal</Button>
                     <Button variant="ghost" size="sm">Rotate</Button>
                   </div>

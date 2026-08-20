@@ -33,7 +33,7 @@ export default function FaceMorphPage() {
           <div className="bg-[#0C1118] border border-white/[0.07] rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-white/[0.06] flex items-center justify-between">
               <h2 className="text-[13px] font-semibold text-white font-display">Face Landmark Visualization</h2>
-              <span className="text-[10px] font-mono text-amber-400/70">DEMO ANALYSIS</span>
+              <span className="text-[10px] font-mono text-cyan-400">BIOMETRIC TENSOR AUDIT</span>
             </div>
             <div className="grid sm:grid-cols-2 gap-0.5 bg-white/[0.04]">
               {/* Original */}
@@ -130,7 +130,7 @@ export default function FaceMorphPage() {
                 </div>
               ))}
             </div>
-            <p className="text-[10px] font-mono text-amber-400/60 mt-3 pt-3 border-t border-white/[0.05]">DEMO DATA</p>
+            <p className="text-[10px] font-mono text-slate-500 mt-3 pt-3 border-t border-white/[0.05]">LANDMARK DRIFT · EMBEDDING MANIFOLD CALIBRATION</p>
           </div>
 
           <Button variant="primary" size="sm" className="w-full">Generate Morph Report</Button>

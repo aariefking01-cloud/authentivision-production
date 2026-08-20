@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Shield, ArrowRight, Lock } from 'lucide-react';
+import { Eye, EyeOff, Shield, ArrowRight, Lock, UserCheck } from 'lucide-react';
+import { useAuth, type UserRole } from '../lib/firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('analyst@forensics.gov');
@@ -8,12 +9,35 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const { login, loginAsDemoRole } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => { navigate('/dashboard'); }, 900);
+    setErrorMsg(null);
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Authentication failed. Check credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRoleSelect = async (role: UserRole) => {
+    setLoading(true);
+    try {
+      await loginAsDemoRole(role);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Demo authentication failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -74,7 +98,7 @@ export default function LoginPage() {
         {/* Bottom */}
         <div className="relative flex items-center gap-3 text-[11px] text-slate-600">
           <Lock size={12} className="text-slate-700" />
-          <span className="font-mono">TLS 1.3 ENCRYPTED · AUDIT LOGGED · SECURE SESSION</span>
+          <span className="font-mono">FIREBASE AUTH · TLS 1.3 ENCRYPTED · AUDIT LOGGED</span>
         </div>
       </div>
 
@@ -91,6 +115,12 @@ export default function LoginPage() {
             <h2 className="text-[26px] font-bold text-white font-display">Sign in</h2>
             <p className="text-[13px] text-slate-500 mt-1">Access the forensic analysis platform</p>
           </div>
+
+          {errorMsg && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded text-[12px] text-red-300">
+              {errorMsg}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="space-y-4 mb-5">
@@ -168,19 +198,27 @@ export default function LoginPage() {
               <div className="w-full border-t border-white/[0.06]" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#070A0F] px-3 text-[11px] text-slate-600">or</span>
+              <span className="bg-[#070A0F] px-3 text-[11px] text-slate-600 uppercase tracking-wider font-mono">Quick Access Role Login</span>
             </div>
           </div>
 
-          <button
-            type="button"
-            className="w-full flex items-center justify-center gap-2 border border-white/[0.08] text-slate-400 py-2.5 rounded-md hover:border-white/[0.15] hover:text-slate-200 transition-all text-[13px]"
-          >
-            <Shield size={14} className="text-slate-500" /> Continue with organization SSO
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            {(['INVESTIGATOR', 'ANALYST', 'REVIEWER', 'ADMIN'] as UserRole[]).map(r => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => handleRoleSelect(r)}
+                disabled={loading}
+                className="flex items-center justify-center gap-1.5 border border-white/[0.08] bg-white/[0.02] text-slate-300 hover:text-white hover:border-cyan-400/40 hover:bg-cyan-400/[0.04] py-2 rounded-md transition-all text-[11.5px] font-mono"
+              >
+                <UserCheck size={13} className="text-cyan-400" />
+                {r}
+              </button>
+            ))}
+          </div>
 
-          <p className="text-center text-[11px] text-slate-700 mt-8 font-mono">
-            DEMO ENVIRONMENT — Any credentials accepted
+          <p className="text-center text-[11px] text-slate-600 mt-6 font-mono">
+            CONNECTED TO FIREBASE ENVIRONMENT
           </p>
         </div>
       </div>

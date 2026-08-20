@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Search, Bell, ChevronDown, X, CheckCheck, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Menu, Search, Bell, ChevronDown, CheckCheck, AlertTriangle, CheckCircle2, Info, Shield, LogOut } from 'lucide-react';
 import { notifications as mockNotifications } from '../../data/mockData';
 import type { Notification } from '../../types';
+import { useAuth, type UserRole } from '../../lib/firebase/auth';
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -14,6 +16,9 @@ export function TopBar({ onMenuClick, onCommandOpen }: TopBarProps) {
   const [notifs, setNotifs] = useState<Notification[]>(mockNotifications);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const { profile, logout, updateRole } = useAuth();
+  const navigate = useNavigate();
 
   const unread = notifs.filter(n => !n.read).length;
 
@@ -28,6 +33,16 @@ export function TopBar({ onMenuClick, onCommandOpen }: TopBarProps) {
 
   const markAllRead = () => setNotifs(prev => prev.map(n => ({ ...n, read: true })));
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const handleRoleChange = async (role: UserRole) => {
+    await updateRole(role);
+    setProfileOpen(false);
+  };
+
   const notifIcon = (type: Notification['type']) => {
     const cls = 'w-4 h-4 flex-shrink-0';
     if (type === 'error') return <AlertTriangle className={`${cls} text-red-400`} />;
@@ -35,6 +50,10 @@ export function TopBar({ onMenuClick, onCommandOpen }: TopBarProps) {
     if (type === 'success') return <CheckCircle2 className={`${cls} text-emerald-400`} />;
     return <Info className={`${cls} text-blue-400`} />;
   };
+
+  const currentInitials = profile?.displayName
+    ? profile.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'AV';
 
   return (
     <header className="h-14 border-b border-white/[0.06] bg-[#070A0F]/95 backdrop-blur-sm flex items-center px-4 gap-3 z-30 flex-shrink-0">
@@ -54,11 +73,19 @@ export function TopBar({ onMenuClick, onCommandOpen }: TopBarProps) {
         aria-label="Open command palette"
       >
         <Search size={13} />
-        <span className="text-[12.5px]">Search or run command…</span>
+        <span className="text-[12.5px]">Search cases, analyses, evidence…</span>
         <kbd className="ml-auto text-[10px] text-slate-600 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.08] font-mono">⌘K</kbd>
       </button>
 
       <div className="flex-1" />
+
+      {/* Role Badge */}
+      {profile && (
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[11px] font-mono text-cyan-300">
+          <Shield size={12} className="text-cyan-400" />
+          <span>{profile.role}</span>
+        </div>
+      )}
 
       {/* Notifications */}
       <div className="relative" ref={notifRef}>
@@ -114,31 +141,50 @@ export function TopBar({ onMenuClick, onCommandOpen }: TopBarProps) {
           aria-label="User profile"
           aria-expanded={profileOpen}
         >
-          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-[11px] font-bold text-white">
-            MO
+          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center text-[11px] font-bold text-white font-mono">
+            {currentInitials}
           </div>
           <div className="hidden sm:block text-left">
-            <p className="text-[12px] font-medium text-slate-200 leading-tight">M. Okonkwo</p>
-            <p className="text-[10px] text-slate-500">Investigator</p>
+            <p className="text-[12px] font-medium text-slate-200 leading-tight">{profile?.displayName || 'M. Okonkwo'}</p>
+            <p className="text-[10px] text-slate-500 capitalize">{profile?.role ? profile.role.toLowerCase() : 'Investigator'}</p>
           </div>
           <ChevronDown size={12} className="text-slate-500 hidden sm:block" />
         </button>
 
         {profileOpen && (
-          <div className="absolute right-0 top-full mt-2 w-52 bg-[#0C1118] border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden z-50">
+          <div className="absolute right-0 top-full mt-2 w-60 bg-[#0C1118] border border-white/[0.08] rounded-lg shadow-2xl overflow-hidden z-50">
             <div className="px-4 py-3 border-b border-white/[0.06]">
-              <p className="text-[13px] font-semibold text-white">M. Okonkwo</p>
-              <p className="text-[11px] text-slate-500">m.okonkwo@forensics.gov</p>
+              <p className="text-[13px] font-semibold text-white">{profile?.displayName || 'M. Okonkwo'}</p>
+              <p className="text-[11px] text-slate-500">{profile?.email || 'analyst@forensics.gov'}</p>
+              <p className="text-[10px] text-cyan-400 font-mono mt-1">{profile?.organizationName || 'Federal Forensic Bureau'}</p>
             </div>
+
+            <div className="px-4 py-2 border-b border-white/[0.06]">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-mono mb-1">Switch Active Role</p>
+              <div className="grid grid-cols-2 gap-1">
+                {(['INVESTIGATOR', 'ANALYST', 'REVIEWER', 'ADMIN'] as UserRole[]).map(r => (
+                  <button
+                    key={r}
+                    onClick={() => handleRoleChange(r)}
+                    className={`text-[10.5px] px-2 py-1 rounded text-left font-mono transition-colors ${
+                      profile?.role === r ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:bg-white/[0.05]'
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {[['Settings', '/settings'], ['Activity Log', '/activity'], ['Help', '/help']].map(([label, path]) => (
-              <a key={path} href={path} className="flex items-center px-4 py-2.5 text-[12.5px] text-slate-300 hover:text-white hover:bg-white/[0.04] transition-colors">
+              <Link key={path} to={path} onClick={() => setProfileOpen(false)} className="flex items-center px-4 py-2.5 text-[12.5px] text-slate-300 hover:text-white hover:bg-white/[0.04] transition-colors">
                 {label}
-              </a>
+              </Link>
             ))}
             <div className="border-t border-white/[0.06] p-2">
-              <a href="/login" className="flex items-center px-2 py-2 rounded text-[12.5px] text-red-400 hover:bg-red-400/10 transition-colors">
-                Sign out
-              </a>
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-2 py-2 rounded text-[12.5px] text-red-400 hover:bg-red-400/10 transition-colors">
+                <LogOut size={13} /> Sign out
+              </button>
             </div>
           </div>
         )}

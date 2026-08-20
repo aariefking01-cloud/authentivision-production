@@ -1,14 +1,17 @@
 import type { Verdict, RiskLevel, AnalysisStatus, CaseStatus, IntegrityStatus, SystemStatus } from '../../types';
+import { normalizeVerdict } from '../../lib/av/format';
 
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {
-  const map: Record<Verdict, { label: string; color: string }> = {
-    authentic: { label: 'Authentic', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30' },
-    deepfake: { label: 'Deepfake', color: 'text-red-400 bg-red-400/10 border-red-400/30' },
-    suspicious: { label: 'Suspicious', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30' },
-    'face-morph': { label: 'Face Morph', color: 'text-violet-400 bg-violet-400/10 border-violet-400/30' },
-    inconclusive: { label: 'Inconclusive', color: 'text-slate-400 bg-slate-400/10 border-slate-400/30' },
+  const norm = normalizeVerdict(verdict);
+  const map: Record<string, { label: string; color: string }> = {
+    AUTHENTIC: { label: 'AUTHENTIC', color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30 font-bold' },
+    DEEPFAKE: { label: 'DEEPFAKE', color: 'text-red-400 bg-red-400/10 border-red-400/30 font-bold' },
+    'FACE MORPHED': { label: 'FACE MORPHED', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30 font-bold' },
+    'FACE MORP': { label: 'FACE MORPHED', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30 font-bold' },
+    SUSPICIOUS: { label: 'FACE MORPHED', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30 font-bold' },
+    INCONCLUSIVE: { label: 'INCONCLUSIVE', color: 'text-slate-400 bg-slate-400/10 border-slate-400/30 font-bold' },
   };
-  const { label, color } = map[verdict];
+  const { label, color } = map[norm] || map.INCONCLUSIVE;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border font-mono tracking-wide ${color}`}>
       {label}
@@ -23,7 +26,7 @@ export function RiskBadge({ risk }: { risk: RiskLevel }) {
     high: { label: 'High', color: 'text-orange-400 bg-orange-400/10 border-orange-400/20' },
     critical: { label: 'Critical', color: 'text-red-400 bg-red-400/10 border-red-400/30' },
   };
-  const { label, color } = map[risk];
+  const { label, color } = map[risk] || map.medium;
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border uppercase tracking-wider ${color}`}>
       {label}

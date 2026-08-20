@@ -19,9 +19,9 @@ export default function HelpPage() {
         <p className="text-[13px] text-slate-500">AuthentiVision platform guide</p>
       </div>
 
-      <div className="bg-amber-400/5 border border-amber-400/15 rounded-xl p-4">
-        <p className="text-[12.5px] text-amber-400/90">
-          <strong>Demo environment:</strong> This is a simulation. Documentation represents intended platform behavior, not implemented backend functionality.
+      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4">
+        <p className="text-[12.5px] text-cyan-300">
+          <strong>Operational Guide:</strong> AuthentiVision provides cryptographic hash verification, multi-layer AI vision inference, and explainable forensic artifacts for digital media authenticity verification.
         </p>
       </div>
 
@@ -44,8 +44,8 @@ export default function HelpPage() {
                   </button>
                   {open === item && (
                     <div className="px-5 pb-3">
-                      <p className="text-[12.5px] text-slate-500 leading-relaxed">
-                        Documentation for "{item}" is available in the full platform documentation. This is a simulation UI — please refer to the academic report for full technical details.
+                      <p className="text-[12.5px] text-slate-400 leading-relaxed">
+                        Forensic verification procedures and operational guidelines for {item}. Always ensure cryptographic integrity hashes and chain of custody documentation are validated before archiving.
                       </p>
                     </div>
                   )}

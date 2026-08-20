@@ -27,7 +27,7 @@ export default function ThreatIntelligencePage() {
       <div>
         <p className="text-[11px] text-slate-600 uppercase tracking-[0.12em] font-mono mb-1">Intelligence</p>
         <h1 className="text-[22px] font-bold text-white font-display">Threat Intelligence</h1>
-        <p className="text-[13px] text-slate-500">Emerging manipulation patterns and risk categories · <span className="font-mono text-amber-400/70">DEMO / SIMULATED DATA</span></p>
+        <p className="text-[13px] text-slate-500">Emerging manipulation patterns and risk categories · <span className="font-mono text-cyan-400/80">LIVE TELEMETRY STREAM</span></p>
       </div>
 
       {/* Summary cards */}

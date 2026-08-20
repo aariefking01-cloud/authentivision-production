@@ -1,23 +1,49 @@
-import { useState } from 'react';
-import { FileText, Download, Eye, Plus, File } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, Download, Plus } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { RiskBadge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
-
-const reports = [
-  { id: 'RPT-0047', title: 'Operation Mirage — Deepfake Analysis', case: 'CASE-0092', verdict: 'Deepfake Confirmed', risk: 'critical' as const, generated: 'Aug 10, 2026', analyst: 'M. Okonkwo', pages: 18 },
-  { id: 'RPT-0046', title: 'Identity Fraud Ring — Face Morph Analysis', case: 'CASE-0091', verdict: 'Face Morphing Detected', risk: 'high' as const, generated: 'Aug 09, 2026', analyst: 'S. Reyes', pages: 12 },
-  { id: 'RPT-0045', title: 'Media Verification Batch — Full Report', case: 'CASE-0090', verdict: 'Mixed Results', risk: 'medium' as const, generated: 'Aug 08, 2026', analyst: 'L. Nakamura', pages: 34 },
-  { id: 'RPT-0044', title: 'Credential Fraud Investigation', case: 'CASE-0088', verdict: 'Manipulation Confirmed', risk: 'high' as const, generated: 'Jul 16, 2026', analyst: 'S. Reyes', pages: 9 },
-];
+import { fetchReports, fetchAnalyses } from '../lib/firebase/firestore';
+import { generateAndDownloadReport } from '../lib/av/reports';
+import type { ReportRecord, AnalysisRecord } from '../lib/av/types';
 
 export default function ReportsPage() {
+  const [reportsList, setReportsList] = useState<ReportRecord[]>([]);
+  const [analysesList, setAnalysesList] = useState<AnalysisRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [showBuilder, setShowBuilder] = useState(false);
+  const [selectedAnalysisId, setSelectedAnalysisId] = useState<string>('');
 
-  const handleGenerate = () => {
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const [reps, ans] = await Promise.all([fetchReports(), fetchAnalyses()]);
+      setReportsList(reps);
+      setAnalysesList(ans);
+      if (ans.length > 0) setSelectedAnalysisId(ans[0].id);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  const handleGenerate = async () => {
+    if (!selectedAnalysisId) return;
     setGenerating(true);
-    setTimeout(() => { setGenerating(false); setShowBuilder(false); }, 1500);
+    const targetAnalysis = analysesList.find(a => a.id === selectedAnalysisId);
+    if (targetAnalysis) {
+      const generated = await generateAndDownloadReport(targetAnalysis, undefined, 'PDF');
+      setReportsList(prev => [generated, ...prev]);
+    }
+    setGenerating(false);
+    setShowBuilder(false);
+  };
+
+  const handleDownload = async (rep: ReportRecord) => {
+    const targetAnalysis = analysesList.find(a => a.id === rep.analysisId);
+    if (targetAnalysis) {
+      await generateAndDownloadReport(targetAnalysis, undefined, rep.format === 'JSON' ? 'JSON' : 'PDF');
+    }
   };
 
   return (
@@ -26,7 +52,7 @@ export default function ReportsPage() {
         <div>
           <p className="text-[11px] text-slate-600 uppercase tracking-[0.12em] font-mono mb-1">Evidence</p>
           <h1 className="text-[22px] font-bold text-white font-display">Forensic Reports</h1>
-          <p className="text-[13px] text-slate-500">Generated investigation reports · {reports.length} total</p>
+          <p className="text-[13px] text-slate-500">Generated investigation reports · {reportsList.length} total</p>
         </div>
         <Button variant="primary" size="sm" icon={<Plus size={13} />} onClick={() => setShowBuilder(o => !o)}>
           Generate Report
@@ -40,68 +66,62 @@ export default function ReportsPage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-[11px] text-slate-500 uppercase tracking-wider mb-2">Select Analysis</label>
-              <select className="w-full bg-white/[0.04] border border-white/[0.08] rounded-md px-3 py-2 text-[13px] text-slate-300 focus:outline-none focus:border-cyan-400/40">
-                <option>AV-2026-00481 — interview_clip.mp4</option>
-                <option>AV-2026-00480 — press_conference.mp4</option>
-                <option>AV-2026-00479 — passport_photo.jpg</option>
+              <select
+                value={selectedAnalysisId}
+                onChange={e => setSelectedAnalysisId(e.target.value)}
+                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-md px-3 py-2 text-[13px] text-slate-300 focus:outline-none focus:border-cyan-400/40"
+              >
+                {analysesList.map(a => (
+                  <option key={a.id} value={a.id}>{a.id} — {a.filename} ({a.verdict})</option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="block text-[11px] text-slate-500 uppercase tracking-wider mb-2">Format</label>
+              <label className="block text-[11px] text-slate-500 uppercase tracking-wider mb-2">Export Format</label>
               <div className="flex gap-2">
-                {['PDF', 'JSON', 'CSV'].map(fmt => (
-                  <button key={fmt} className="px-3 py-2 rounded-md border border-white/[0.07] text-[12.5px] text-slate-400 hover:border-cyan-400/30 hover:text-cyan-400 transition-all">
-                    {fmt}
-                  </button>
-                ))}
+                <button className="px-3 py-2 rounded-md border border-cyan-400/40 bg-cyan-400/10 text-[12.5px] text-cyan-300">
+                  PDF (Official Forensic Document)
+                </button>
               </div>
             </div>
           </div>
-          <div>
-            <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2">Report Sections</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {['Executive Summary', 'Media Information', 'Analysis Config', 'Detection Result', 'Confidence', 'Evidence', 'Visual Findings', 'Model Info', 'Technical Findings', 'Timeline', 'Integrity', 'Conclusion'].map(s => (
-                <label key={s} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="rounded border-white/20 accent-cyan-400" />
-                  <span className="text-[12px] text-slate-400">{s}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+
           <div className="flex gap-2 pt-2">
             <Button variant="primary" size="sm" onClick={handleGenerate} disabled={generating}>
-              {generating ? 'Generating…' : 'Generate Report'}
+              {generating ? 'Generating Forensic PDF…' : 'Generate & Download PDF'}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShowBuilder(false)}>Cancel</Button>
-            <p className="text-[11px] text-slate-600 self-center ml-2 font-mono">SIMULATION — export is simulated</p>
           </div>
         </div>
       )}
 
       {/* Reports list */}
-      {reports.length === 0 ? (
+      {loading ? (
+        <div className="p-8 text-center text-slate-500 font-mono text-[12px]">Loading reports vault...</div>
+      ) : reportsList.length === 0 ? (
         <EmptyState icon={<FileText size={24} />} title="No reports yet" description="Generate a forensic report from a completed analysis." action={{ label: 'Generate Report', onClick: () => setShowBuilder(true) }} />
       ) : (
         <div className="space-y-3">
-          {reports.map(r => (
+          {reportsList.map(r => (
             <div key={r.id} className="bg-[#0C1118] border border-white/[0.07] rounded-xl p-5 hover:border-white/[0.12] transition-all">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1.5">
                     <span className="font-mono text-[11px] text-cyan-400/70">{r.id}</span>
-                    <RiskBadge risk={r.risk} />
-                    <span className="font-mono text-[10px] text-slate-600">{r.case}</span>
+                    <RiskBadge risk={r.risk || 'high'} />
+                    <span className="font-mono text-[10px] text-slate-600">{r.caseId}</span>
                   </div>
                   <h3 className="text-[14px] font-semibold text-white font-display">{r.title}</h3>
-                  <p className="text-[12px] text-slate-500 mt-1">Verdict: <span className="text-slate-300">{r.verdict}</span></p>
+                  <p className="text-[12px] text-slate-500 mt-1">Verdict: <span className="text-slate-300 font-mono uppercase">{r.verdict}</span></p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <div className="text-right mr-3 hidden sm:block">
-                    <p className="text-[11px] text-slate-500 font-mono">{r.generated}</p>
-                    <p className="text-[11px] text-slate-600">{r.analyst} · {r.pages} pages</p>
+                    <p className="text-[11px] text-slate-500 font-mono">{new Date(r.generatedAt || r.createdAt).toLocaleDateString()}</p>
+                    <p className="text-[11px] text-slate-600">{r.analyst || r.author}</p>
                   </div>
-                  <Button variant="ghost" size="sm" icon={<Eye size={13} />}>View</Button>
-                  <Button variant="outline" size="sm" icon={<Download size={13} />}>Export</Button>
+                  <Button variant="outline" size="sm" icon={<Download size={13} />} onClick={() => handleDownload(r)}>
+                    Download PDF
+                  </Button>
                 </div>
               </div>
             </div>

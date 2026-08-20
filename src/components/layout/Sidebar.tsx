@@ -135,11 +135,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Demo indicator */}
+        {/* System Status */}
         <div className="px-4 py-3 border-t border-white/[0.06] flex-shrink-0">
-          <div className="flex items-center gap-2 bg-amber-400/5 border border-amber-400/15 rounded px-2.5 py-2">
-            <Terminal size={10} className="text-amber-400 flex-shrink-0" />
-            <span className="text-[10px] font-mono text-amber-400/80 tracking-wide">DEMO ENVIRONMENT</span>
+          <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.06] rounded-lg px-2.5 py-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-glow flex-shrink-0" />
+              <span className="text-[10px] font-mono text-slate-300 tracking-wider">ENGINE ACTIVE</span>
+            </div>
+            <span className="text-[9px] font-mono text-cyan-400/80">v2.5</span>
           </div>
         </div>
       </aside>

@@ -1,0 +1,6 @@
+{
+  "name": "AuthentiVision",
+  "description": "AI-powered media forensics platform for deepfake and face-morph detection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

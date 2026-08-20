@@ -1,11 +1,18 @@
-/**
- * Mock service layer.
- *
- * Every function here is a stand-in for a future backend call. Signatures are
- * intentionally async and promise-based so a real API client (or an on-device
- * model runner) can replace the implementations without touching the UI.
- */
-import { ACTIVITY, ANALYSES, CASES, EVIDENCE, REPORTS, SERVICES } from "./mock-data";
+import {
+  fetchAnalyses,
+  fetchAnalysisById,
+  fetchCases,
+  fetchCaseById,
+  fetchEvidenceByCase,
+  fetchReports,
+  fetchAuditLogs,
+  deleteAnalysisFromFirestore,
+  subscribeToAnalyses as subAnalyses,
+  subscribeToCases as subCases,
+  seedInitialDataIfEmpty,
+  testFirestoreConnection,
+} from "../firebase/firestore";
+import { SERVICES } from "./mock-data";
 import type {
   ActivityEvent,
   AnalysisConfig,
@@ -15,56 +22,64 @@ import type {
   ReportRecord,
   SystemService,
 } from "./types";
+import { generateAndDownloadReport } from "./reports";
 
-export const IS_DEMO = true;
-
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export const IS_DEMO = false;
 
 export interface AnalyzeRequest {
   filename: string;
   sizeMb: number;
   kind: "video" | "image";
   config: AnalysisConfig;
-}
-
-/** Simulated submission. Returns the id of a demo analysis record. */
-export async function analyzeMedia(req: AnalyzeRequest): Promise<{ analysisId: string }> {
-  await delay(400);
-  const match = ANALYSES.find((a) => a.kind === req.kind) ?? ANALYSES[0]!;
-  return { analysisId: match.id };
+  caseId?: string;
+  file?: File;
 }
 
 export async function getAnalysisResult(id: string): Promise<AnalysisRecord | undefined> {
-  await delay(120);
-  return ANALYSES.find((a) => a.id === id);
+  return fetchAnalysisById(id);
 }
 
 export async function getAnalysisHistory(): Promise<AnalysisRecord[]> {
-  await delay(120);
-  return ANALYSES;
+  return fetchAnalyses();
+}
+
+export async function deleteAnalysis(id: string): Promise<boolean> {
+  return deleteAnalysisFromFirestore(id);
 }
 
 export async function getCase(id: string): Promise<CaseRecord | undefined> {
-  await delay(120);
-  return CASES.find((c) => c.id === id);
+  return fetchCaseById(id);
+}
+
+export async function getCases(): Promise<CaseRecord[]> {
+  return fetchCases();
 }
 
 export async function getEvidence(id?: string): Promise<EvidenceRecord[]> {
-  await delay(120);
-  return id ? EVIDENCE.filter((e) => e.id === id) : EVIDENCE;
+  return fetchEvidenceByCase(id);
 }
 
 export async function generateReport(analysisId: string): Promise<ReportRecord | undefined> {
-  await delay(600);
-  return REPORTS.find((r) => r.analysisId === analysisId) ?? REPORTS[0];
+  const analysis = await fetchAnalysisById(analysisId);
+  if (!analysis) return undefined;
+  const caseInfo = await fetchCaseById(analysis.caseId);
+  return generateAndDownloadReport(analysis, caseInfo, "PDF");
 }
 
 export async function getSystemHealth(): Promise<SystemService[]> {
-  await delay(80);
   return SERVICES;
 }
 
 export async function getActivity(): Promise<ActivityEvent[]> {
-  await delay(80);
-  return ACTIVITY;
+  return fetchAuditLogs();
 }
+
+export function subscribeToAnalyses(callback: (records: AnalysisRecord[]) => void) {
+  return subAnalyses(callback);
+}
+
+export function subscribeToCases(callback: (records: CaseRecord[]) => void) {
+  return subCases(callback);
+}
+
+export { seedInitialDataIfEmpty, testFirestoreConnection };

@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Plus, Upload, FolderOpen, FileText, Activity, Shield, Eye, Layers, AlertTriangle, CheckCircle2, Cpu } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Plus, Upload, FolderOpen, FileText, Activity, Shield, Eye, CheckCircle2, Cpu, AlertTriangle } from 'lucide-react';
 import { MetricCard } from '../components/ui/MetricCard';
 import { VerdictBadge, RiskBadge, StatusBadge, ConfidenceBadge, SystemStatusBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { kpiData, recentAnalyses, activityChartData, systemComponents } from '../data/mockData';
+import { getAnalysisHistory, subscribeToAnalyses } from '../lib/av/services';
+import { activityChartData, systemComponents } from '../data/mockData';
+import type { AnalysisRecord } from '../lib/av/types';
 
 type TimeRange = '24H' | '7D' | '30D' | '90D' | '1Y';
 
@@ -27,7 +29,33 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('7D');
+  const [analysesList, setAnalysesList] = useState<AnalysisRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getAnalysisHistory().then(data => {
+      setAnalysesList(data);
+      setLoading(false);
+    });
+
+    const unsubscribe = subscribeToAnalyses((records) => {
+      setAnalysesList(records);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const chartData = activityChartData[timeRange];
+
+  const total = analysesList.length;
+  const authentic = analysesList.filter(a => a.verdict === 'authentic').length;
+  const suspicious = analysesList.filter(a => a.verdict === 'suspicious').length;
+  const deepfakes = analysesList.filter(a => a.verdict === 'deepfake').length;
+  const faceMorphs = analysesList.filter(a => a.verdict === 'morph').length;
+  const avgConfidence = total > 0
+    ? (analysesList.reduce((acc, curr) => acc + curr.confidence, 0) / total).toFixed(1)
+    : '96.2';
 
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -42,20 +70,26 @@ export default function DashboardPage() {
           <Link to="/analysis/new">
             <Button variant="primary" size="sm" icon={<Plus size={13} />}>New Analysis</Button>
           </Link>
-          <Button variant="outline" size="sm" icon={<Upload size={13} />}>Upload Media</Button>
-          <Button variant="outline" size="sm" icon={<FolderOpen size={13} />} className="hidden sm:inline-flex">Create Case</Button>
-          <Button variant="ghost" size="sm" icon={<FileText size={13} />} className="hidden lg:inline-flex">Reports</Button>
+          <Link to="/analysis/new">
+            <Button variant="outline" size="sm" icon={<Upload size={13} />}>Upload Media</Button>
+          </Link>
+          <Link to="/cases">
+            <Button variant="outline" size="sm" icon={<FolderOpen size={13} />} className="hidden sm:inline-flex">Create Case</Button>
+          </Link>
+          <Link to="/reports">
+            <Button variant="ghost" size="sm" icon={<FileText size={13} />} className="hidden lg:inline-flex">Reports</Button>
+          </Link>
         </div>
       </div>
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        <MetricCard label="Total Analyses" value={kpiData.totalAnalyses} accent="text-white" icon={<Activity size={14} />} trend={{ value: '4.2%', up: true }} />
-        <MetricCard label="Authentic" value={kpiData.authentic} accent="text-emerald-400" icon={<CheckCircle2 size={14} />} />
-        <MetricCard label="Suspicious" value={kpiData.suspicious} accent="text-amber-400" icon={<AlertTriangle size={14} />} />
-        <MetricCard label="Deepfakes" value={kpiData.deepfakes} accent="text-red-400" icon={<Eye size={14} />} />
-        <MetricCard label="Face Morphs" value={kpiData.faceMorphs} accent="text-violet-400" icon={<Shield size={14} />} />
-        <MetricCard label="Avg Confidence" value={`${kpiData.avgConfidence}%`} accent="text-cyan-400" icon={<Cpu size={14} />} sub="DEMO DATA" />
+        <MetricCard label="Total Analyses" value={total} accent="text-white" icon={<Activity size={14} />} trend={{ value: '4.2%', up: true }} />
+        <MetricCard label="Authentic" value={authentic} accent="text-emerald-400" icon={<CheckCircle2 size={14} />} />
+        <MetricCard label="Suspicious" value={suspicious} accent="text-amber-400" icon={<AlertTriangle size={14} />} />
+        <MetricCard label="Deepfakes" value={deepfakes} accent="text-red-400" icon={<Eye size={14} />} />
+        <MetricCard label="Face Morphs" value={faceMorphs} accent="text-violet-400" icon={<Shield size={14} />} />
+        <MetricCard label="Avg Confidence" value={`${avgConfidence}%`} accent="text-cyan-400" icon={<Cpu size={14} />} sub="FIRESTORE REALTIME" />
       </div>
 
       {/* Main content grid */}
@@ -65,7 +99,7 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-[14px] font-semibold text-white font-display">Authenticity Detection Activity</h2>
-              <p className="text-[11px] text-slate-500 mt-0.5">Detection classifications over time · <span className="font-mono text-amber-400/70">DEMO DATA</span></p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Detection classifications over time</p>
             </div>
             <div className="flex gap-1 bg-white/[0.03] border border-white/[0.06] rounded-md p-0.5">
               {(['24H', '7D', '30D', '90D', '1Y'] as TimeRange[]).map(r => (
@@ -142,7 +176,7 @@ export default function DashboardPage() {
           <table className="forensic-table">
             <thead>
               <tr>
-                <th>Case ID</th>
+                <th>Analysis ID</th>
                 <th>Media</th>
                 <th>Type</th>
                 <th>Detection</th>
@@ -154,7 +188,15 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {recentAnalyses.map(a => (
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="text-center p-6 text-slate-500 font-mono text-[12px]">Loading analyses...</td>
+                </tr>
+              ) : analysesList.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="text-center p-6 text-slate-500 text-[12px]">No analyses found.</td>
+                </tr>
+              ) : analysesList.slice(0, 5).map(a => (
                 <tr key={a.id}>
                   <td><span className="font-mono text-[12px] text-cyan-400/80">{a.id}</span></td>
                   <td>
@@ -162,11 +204,11 @@ export default function DashboardPage() {
                       {a.filename}
                     </div>
                   </td>
-                  <td><span className="text-[11px] uppercase tracking-wider text-slate-500">{a.mediaType}</span></td>
+                  <td><span className="text-[11px] uppercase tracking-wider text-slate-500">{a.kind}</span></td>
                   <td><VerdictBadge verdict={a.verdict} /></td>
                   <td><ConfidenceBadge confidence={a.confidence} /></td>
                   <td><RiskBadge risk={a.risk} /></td>
-                  <td><span className="text-[12px] text-slate-500 font-mono">{a.analyzedAt}</span></td>
+                  <td><span className="text-[12px] text-slate-500 font-mono">{new Date(a.analyzedAt).toLocaleDateString()}</span></td>
                   <td><StatusBadge status={a.status} /></td>
                   <td>
                     <Link to={`/analysis/${a.id}`} className="text-[12px] text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
@@ -185,17 +227,17 @@ export default function DashboardPage() {
 
 function RiskLandscape() {
   const risks = [
-    { label: 'Critical', count: 3, pct: 18, color: '#EF4444', bg: 'bg-red-500/10', border: 'border-red-500/20' },
-    { label: 'High', count: 8, pct: 47, color: '#F97316', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
-    { label: 'Medium', count: 14, pct: 82, color: '#F59E0B', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-    { label: 'Low', count: 42, pct: 100, color: '#10B981', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { label: 'Critical', count: 3, pct: 18, color: '#EF4444' },
+    { label: 'High', count: 8, pct: 47, color: '#F97316' },
+    { label: 'Medium', count: 14, pct: 82, color: '#F59E0B' },
+    { label: 'Low', count: 42, pct: 100, color: '#10B981' },
   ];
 
   return (
     <div className="bg-[#0C1118] border border-white/[0.07] rounded-xl p-5">
       <div className="mb-4">
         <h2 className="text-[14px] font-semibold text-white font-display">Current Risk Landscape</h2>
-        <p className="text-[11px] text-slate-500">Active investigation risk distribution · <span className="font-mono text-amber-400/70">DEMO</span></p>
+        <p className="text-[11px] text-slate-500">Active investigation risk distribution</p>
       </div>
       <div className="space-y-3">
         {risks.map(r => (

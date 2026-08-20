@@ -1,19 +1,66 @@
 import type { RiskLevel, Verdict } from "./types";
 
-export const VERDICT_LABEL: Record<Verdict, string> = {
-  authentic: "Likely Authentic",
-  deepfake: "Deepfake Detected",
-  morph: "Face Morph Detected",
-  suspicious: "Suspicious Manipulation",
-  inconclusive: "Inconclusive",
+export function normalizeVerdict(v: string): 'AUTHENTIC' | 'DEEPFAKE' | 'FACE MORPHED' | 'SUSPICIOUS' | 'INCONCLUSIVE' {
+  const norm = (v || '').toUpperCase();
+  if (norm.includes('AUTHENTIC')) return 'AUTHENTIC';
+  if (norm.includes('MORPH') || norm.includes('MORP')) return 'FACE MORPHED';
+  if (norm.includes('DEEPFAKE') || norm.includes('AI_GENERATED') || norm.includes('SYNTHETIC')) return 'DEEPFAKE';
+  if (norm.includes('MANIPULATED') || norm.includes('SUSPICIOUS')) return 'FACE MORPHED';
+  if (norm.includes('INCONCLUSIVE')) return 'INCONCLUSIVE';
+  return 'INCONCLUSIVE';
+}
+
+export function getVerdictTextColor(v: string): string {
+  const verdict = normalizeVerdict(v);
+  switch (verdict) {
+    case 'AUTHENTIC': return 'text-emerald-400';
+    case 'DEEPFAKE': return 'text-red-500';
+    case 'FACE MORPHED': return 'text-amber-400';
+    case 'SUSPICIOUS': return 'text-purple-400';
+    case 'INCONCLUSIVE': return 'text-slate-400';
+  }
+}
+
+export const VERDICT_LABEL: Record<string, string> = {
+  authentic: "AUTHENTIC",
+  deepfake: "DEEPFAKE",
+  morph: "FACE MORPHED",
+  "face-morph": "FACE MORPHED",
+  morphed: "FACE MORPHED",
+  suspicious: "FACE MORPHED",
+  inconclusive: "INCONCLUSIVE",
+  LIKELY_AUTHENTIC: "AUTHENTIC",
+  LIKELY_AI_GENERATED: "DEEPFAKE",
+  LIKELY_DEEPFAKE: "DEEPFAKE",
+  LIKELY_MANIPULATED: "FACE MORPHED",
+  LIKELY_MORPHED: "FACE MORPHED",
+  INCONCLUSIVE: "INCONCLUSIVE",
+  AUTHENTIC: "AUTHENTIC",
+  DEEPFAKE: "DEEPFAKE",
+  "FACE MORPHED": "FACE MORPHED",
+  "FACE MORP": "FACE MORPHED",
+  SUSPICIOUS: "FACE MORPHED",
 };
 
-export const VERDICT_SHORT: Record<Verdict, string> = {
-  authentic: "Authentic",
-  deepfake: "Deepfake",
-  morph: "Face Morph",
-  suspicious: "Suspicious",
-  inconclusive: "Inconclusive",
+export const VERDICT_SHORT: Record<string, string> = {
+  authentic: "AUTHENTIC",
+  deepfake: "DEEPFAKE",
+  morph: "FACE MORPHED",
+  "face-morph": "FACE MORPHED",
+  morphed: "FACE MORPHED",
+  suspicious: "FACE MORPHED",
+  inconclusive: "INCONCLUSIVE",
+  LIKELY_AUTHENTIC: "AUTHENTIC",
+  LIKELY_AI_GENERATED: "DEEPFAKE",
+  LIKELY_DEEPFAKE: "DEEPFAKE",
+  LIKELY_MANIPULATED: "FACE MORPHED",
+  LIKELY_MORPHED: "FACE MORPHED",
+  INCONCLUSIVE: "INCONCLUSIVE",
+  AUTHENTIC: "AUTHENTIC",
+  DEEPFAKE: "DEEPFAKE",
+  "FACE MORPHED": "FACE MORPHED",
+  "FACE MORP": "FACE MORPHED",
+  SUSPICIOUS: "FACE MORPHED",
 };
 
 export const RISK_LABEL: Record<RiskLevel, string> = {

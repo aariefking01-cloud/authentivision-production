@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams, Link } from 'react-router-dom';
+import { AuthProvider } from './lib/firebase/auth';
 import { AppShell } from './components/layout/AppShell';
 
 import LandingPage from './pages/LandingPage';
@@ -45,34 +46,36 @@ function CaseDetailPage() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<AppShell />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/analysis/new" element={<NewAnalysisPage />} />
-          <Route path="/analysis/video" element={<NewAnalysisPage />} />
-          <Route path="/analysis/image" element={<NewAnalysisPage />} />
-          <Route path="/analysis/face-morph" element={<FaceMorphPage />} />
-          <Route path="/analysis/batch" element={<BatchAnalysisPage />} />
-          <Route path="/analysis/history" element={<AnalysisHistoryPage />} />
-          <Route path="/analysis/:id" element={<AnalysisResultsPage />} />
-          <Route path="/cases" element={<CasesPage />} />
-          <Route path="/cases/:id" element={<CaseDetailPage />} />
-          <Route path="/evidence" element={<EvidencePage />} />
-          <Route path="/evidence/:id" element={<EvidencePage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-          <Route path="/reports/:id" element={<ReportsPage />} />
-          <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/model-performance" element={<ModelPerformancePage />} />
-          <Route path="/threat-intelligence" element={<ThreatIntelligencePage />} />
-          <Route path="/activity" element={<ActivityPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/help" element={<HelpPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<AppShell />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/analysis/new" element={<NewAnalysisPage />} />
+            <Route path="/analysis/video" element={<NewAnalysisPage />} />
+            <Route path="/analysis/image" element={<NewAnalysisPage />} />
+            <Route path="/analysis/face-morph" element={<FaceMorphPage />} />
+            <Route path="/analysis/batch" element={<BatchAnalysisPage />} />
+            <Route path="/analysis/history" element={<AnalysisHistoryPage />} />
+            <Route path="/analysis/:id" element={<AnalysisResultsPage />} />
+            <Route path="/cases" element={<CasesPage />} />
+            <Route path="/cases/:id" element={<CaseDetailPage />} />
+            <Route path="/evidence" element={<EvidencePage />} />
+            <Route path="/evidence/:id" element={<EvidencePage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/reports/:id" element={<ReportsPage />} />
+            <Route path="/insights" element={<InsightsPage />} />
+            <Route path="/model-performance" element={<ModelPerformancePage />} />
+            <Route path="/threat-intelligence" element={<ThreatIntelligencePage />} />
+            <Route path="/activity" element={<ActivityPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
