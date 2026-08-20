@@ -122,7 +122,7 @@ export async function handleAnalyzeImage(body: any, environment: 'vercel' | 'exp
     analysisId,
     environment,
     provider: 'Gemini Multi-Modal + Multi-Signal Fusion',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.7-flash',
     apiKeyPresent: true,
     responseReceived: new Date().toISOString(),
     durationMs,
@@ -140,7 +140,7 @@ export async function handleAnalyzeImage(body: any, environment: 'vercel' | 'exp
       diagnostics: {
         environment,
         apiKeyPresent: true,
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.7-flash',
         fallbackUsed: false,
         durationMs,
       },
@@ -176,7 +176,7 @@ CRITICAL MANDATE: Do NOT alter any scores, verdicts, or invent any new forensic 
 Structured Evidence Payload:
 ${JSON.stringify(structuredEvidence, null, 2)}`;
 
-      const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite'];
+      const modelsToTry = ['gemini-3.7-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
       let explanationText = '';
       for (const model of modelsToTry) {
         try {

@@ -91,10 +91,10 @@ Respond strictly with a JSON object matching this schema (NO markdown code fence
 }`;
 
     const modelsToTry = [
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
+      'gemini-3.1-flash-lite',
       'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-2.5-flash-lite',
     ];
     let responseText = '';
     let lastError: any = null;

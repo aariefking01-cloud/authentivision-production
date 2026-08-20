@@ -6,7 +6,7 @@ export default function handler(req: any, res: any) {
     environment: process.env.VERCEL ? 'vercel-production' : process.env.NODE_ENV || 'development',
     apiKeyPresent: Boolean(key),
     keyVariable: name,
-    modelConfigured: 'gemini-2.5-flash',
+    modelConfigured: 'gemini-3.7-flash',
     serverTimestamp: new Date().toISOString(),
   });
 }
