@@ -92,10 +92,9 @@ Respond strictly with a JSON object matching this schema (NO markdown code fence
 
     const modelsToTry = [
       'gemini-2.5-flash',
-      'gemini-3.6-flash',
-      'gemini-2.5-flash-lite',
-      'gemini-1.5-flash',
       'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-2.5-flash-lite',
     ];
     let responseText = '';
     let lastError: any = null;
@@ -126,89 +125,13 @@ Respond strictly with a JSON object matching this schema (NO markdown code fence
       } catch (err: any) {
         lastError = err;
         const errDesc = err?.status || err?.code || (err?.message ? String(err.message).slice(0, 100) : 'unavailable');
-        console.info(`VisionProvider model ${model} attempt notice (${errDesc}), trying fallback model...`);
-        // Continue to try fallback model if 503, 429 or transient error
+        console.info(`VisionProvider model ${model} attempt notice (${errDesc}), trying next model...`);
       }
     }
 
     if (!responseText) {
-      const isQuotaError =
-        JSON.stringify(lastError).includes('429') ||
-        JSON.stringify(lastError).includes('RESOURCE_EXHAUSTED') ||
-        JSON.stringify(lastError).includes('quota');
-
-      console.warn(
-        `VisionProvider: Gemini API calls exhausted (${isQuotaError ? '429 Rate Limit / Quota Exceeded' : lastError?.message}). Engaging local Spatial Residual and Provenance Ensemble.`
-      );
-
-      // Heuristic assessment from image container and byte statistics
-      const byteLen = base64Data ? base64Data.length : 0;
-      const isSynthId = provenanceDetails.toLowerCase().includes('synthid') || provenanceDetails.toLowerCase().includes('google ai');
-      const isC2pa = provenanceDetails.toLowerCase().includes('c2pa');
-      const isMorphCandidate = provenanceDetails.toLowerCase().includes('morph') || provenanceDetails.toLowerCase().includes('blend');
-
-      let fallbackVerdict: Verdict = 'LIKELY_AUTHENTIC';
-      let confidence = 84.5;
-      let classification = { aiGenerated: 0.08, manipulated: 0.07, authentic: 0.85 };
-
-      if (isSynthId) {
-        fallbackVerdict = 'LIKELY_AI_GENERATED';
-        confidence = 94.2;
-        classification = { aiGenerated: 0.94, manipulated: 0.04, authentic: 0.02 };
-      } else if (isMorphCandidate) {
-        fallbackVerdict = 'LIKELY_MORPHED';
-        confidence = 88.0;
-        classification = { aiGenerated: 0.15, manipulated: 0.80, authentic: 0.05 };
-      } else if (isC2pa) {
-        fallbackVerdict = 'LIKELY_AUTHENTIC';
-        confidence = 92.0;
-        classification = { aiGenerated: 0.02, manipulated: 0.03, authentic: 0.95 };
-      } else if (byteLen > 0 && (byteLen % 13 === 0 || byteLen % 17 === 0 || byteLen % 19 === 0)) {
-        fallbackVerdict = 'LIKELY_AI_GENERATED';
-        confidence = 79.5;
-        classification = { aiGenerated: 0.81, manipulated: 0.12, authentic: 0.07 };
-      }
-
-      return {
-        verdict: fallbackVerdict,
-        confidence,
-        uncertainty: 12.0,
-        quality: 'MEDIUM',
-        classification,
-        analysisSummary: isQuotaError
-          ? `Analysis completed via Spatial High-Frequency Residuals & Provenance Engine. Image evaluated as ${fallbackVerdict.replace('LIKELY_', '').toLowerCase()} with ${confidence}% confidence.`
-          : `Vision Ensemble evaluated image pixel structure and container provenance. Result: ${fallbackVerdict.replace('LIKELY_', '').toLowerCase()}.`,
-        evidence: [
-          {
-            category: 'ARTIFACTS',
-            finding: 'Spatial High-Frequency Edge Residual Ensemble',
-            severity: fallbackVerdict === 'LIKELY_AUTHENTIC' ? 'LOW' : 'HIGH',
-            confidence: 0.85,
-            detail: 'Evaluated micro-pixel noise variance, high-frequency spatial gradients, and color-channel decorrelation.',
-          },
-          {
-            category: 'PROVENANCE',
-            finding: 'Container Structure Inspection',
-            severity: 'LOW',
-            confidence: 0.90,
-            detail: provenanceDetails || 'Image binary metadata scanned for C2PA, SynthID, and editing software headers.',
-          },
-        ],
-        suspiciousRegions: fallbackVerdict !== 'LIKELY_AUTHENTIC' ? [
-          {
-            description: 'High-frequency edge residual anomaly detected along facial boundary/texture transition',
-            x: 28,
-            y: 22,
-            width: 44,
-            height: 52,
-            severity: 'high'
-          }
-        ] : [],
-        limitations: [
-          'Gemini Multimodal API rate limit was encountered; result calibrated via Spatial Edge Residual Ensemble.',
-          'High-frequency spatial analysis provides high fidelity on uncompressed or standard camera JPEG/PNG images.',
-        ],
-      };
+      const errMsg = lastError?.message || 'Empty response received from Gemini API';
+      throw new Error(`Gemini Multimodal Vision API call failed (${errMsg}). Verify GEMINI_API_KEY environment variable and quota.`);
     }
 
     let parsedJson: any = null;
@@ -219,6 +142,10 @@ Respond strictly with a JSON object matching this schema (NO markdown code fence
       }
     } catch (err) {
       console.warn('Failed to parse Gemini Vision JSON output:', err);
+    }
+
+    if (!parsedJson) {
+      throw new Error('Gemini Multimodal Vision API returned non-JSON structured response. Please retry analysis.');
     }
 
     return {

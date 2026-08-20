@@ -181,7 +181,7 @@ export class DetectionEngine {
           apiResult = await res.json();
         } else {
           const errJson = await res.json().catch(() => ({}));
-          apiError = errJson.error || `Server analysis HTTP error ${res.status}`;
+          apiError = errJson.message || errJson.error || `Server analysis HTTP error ${res.status}`;
         }
       } catch (err: any) {
         apiError = err?.message || 'Network error calling /api/analyze-image';
@@ -192,49 +192,10 @@ export class DetectionEngine {
 
     const duration = (Date.now() - startTime) / 1000;
 
-    // Fallback to local Spatial Residual and Provenance Ensemble if API result is missing or errors out
+    // A failed AI request MUST NEVER produce a fake/invented forensic result.
     if (!apiResult || apiResult.error) {
-      const isMorph = file.name.toLowerCase().includes('morph') || file.name.toLowerCase().includes('blend');
-      const isDeepfake = file.name.toLowerCase().includes('fake') || file.name.toLowerCase().includes('swap');
-      const isAi = file.size % 13 === 0 || file.size % 17 === 0;
-
-      const fallbackVerdict: Verdict = isMorph
-        ? 'LIKELY_MORPHED'
-        : isDeepfake
-        ? 'LIKELY_DEEPFAKE'
-        : isAi
-        ? 'LIKELY_AI_GENERATED'
-        : 'LIKELY_AUTHENTIC';
-
-      const fallbackConf = fallbackVerdict === 'LIKELY_AUTHENTIC' ? 85.0 : 88.5;
-
-      apiResult = {
-        verdict: fallbackVerdict,
-        confidence: fallbackConf,
-        uncertainty: 12.0,
-        quality: 'MEDIUM',
-        riskLevel: fallbackVerdict === 'LIKELY_AUTHENTIC' ? 'low' : 'high',
-        classification: {
-          aiGenerated: fallbackVerdict === 'LIKELY_AI_GENERATED' ? 0.88 : 0.08,
-          manipulated: fallbackVerdict === 'LIKELY_DEEPFAKE' || fallbackVerdict === 'LIKELY_MORPHED' ? 0.85 : 0.07,
-          authentic: fallbackVerdict === 'LIKELY_AUTHENTIC' ? 0.85 : 0.05,
-        },
-        analysisSummary: `Local Spatial Edge Residual and Container Provenance ensemble processed "${file.name}". Evaluated as ${fallbackVerdict.replace('LIKELY_', '').toLowerCase()} with ${fallbackConf}% confidence.`,
-        evidence: [
-          {
-            id: 'ev-fb-01',
-            label: 'Spatial Edge Residual Analysis',
-            severity: fallbackVerdict === 'LIKELY_AUTHENTIC' ? 'low' : 'high',
-            contribution: 35,
-            summary: 'High-frequency micro-pixel noise variance evaluated.',
-            detail: 'Evaluated micro-pixel noise variance, spatial gradients, and container metadata.',
-          },
-        ],
-        suspiciousRegions: fallbackVerdict !== 'LIKELY_AUTHENTIC' ? [
-          { description: 'Spatial edge noise anomaly detected around facial boundary', x: 30, y: 25, width: 40, height: 50, severity: 'high' }
-        ] : [],
-        provenance: { c2paDetected: false, c2paValid: false, synthIdDetected: false, metadataAvailable: true },
-      };
+      const finalErrMsg = apiResult?.message || apiResult?.error || apiError || 'Forensic analysis could not be completed by the server.';
+      throw new Error(finalErrMsg);
     }
 
     // Map API result to full DetectionResult
