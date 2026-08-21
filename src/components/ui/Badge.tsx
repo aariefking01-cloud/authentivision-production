@@ -8,10 +8,11 @@ export function VerdictBadge({ verdict }: { verdict: Verdict }) {
     DEEPFAKE: { label: 'DEEPFAKE', color: 'text-red-400 bg-red-400/10 border-red-400/30 font-bold' },
     'FACE MORPHED': { label: 'FACE MORPHED', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30 font-bold' },
     'FACE MORP': { label: 'FACE MORPHED', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30 font-bold' },
-    SUSPICIOUS: { label: 'FACE MORPHED', color: 'text-amber-400 bg-amber-400/10 border-amber-400/30 font-bold' },
-    INCONCLUSIVE: { label: 'INCONCLUSIVE', color: 'text-slate-400 bg-slate-400/10 border-slate-400/30 font-bold' },
+    SUSPICIOUS: { label: 'DEEPFAKE', color: 'text-red-400 bg-red-400/10 border-red-400/30 font-bold' },
+    'INSUFFICIENT EVIDENCE': { label: 'INSUFFICIENT EVIDENCE', color: 'text-slate-400 bg-slate-400/10 border-slate-400/30 font-bold' },
+    INCONCLUSIVE: { label: 'INSUFFICIENT EVIDENCE', color: 'text-slate-400 bg-slate-400/10 border-slate-400/30 font-bold' },
   };
-  const { label, color } = map[norm] || map.INCONCLUSIVE;
+  const { label, color } = map[norm] || map['INSUFFICIENT EVIDENCE'];
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border font-mono tracking-wide ${color}`}>
       {label}

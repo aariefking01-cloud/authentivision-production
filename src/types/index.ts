@@ -1,4 +1,25 @@
-export type Verdict = 'AUTHENTIC' | 'DEEPFAKE' | 'FACE MORPHED' | 'FACE MORP' | 'SUSPICIOUS' | 'INCONCLUSIVE' | 'authentic' | 'deepfake' | 'suspicious' | 'face-morph' | 'morph' | 'morphed' | 'inconclusive' | 'LIKELY_AUTHENTIC' | 'LIKELY_AI_GENERATED' | 'LIKELY_DEEPFAKE' | 'LIKELY_MANIPULATED' | 'LIKELY_MORPHED' | 'INCONCLUSIVE';
+export type Verdict =
+  | 'AUTHENTIC'
+  | 'DEEPFAKE'
+  | 'FACE MORPHED'
+  | 'FACE MORP'
+  | 'MANIPULATED / SYNTHETIC'
+  | 'MANIPULATED'
+  | 'INSUFFICIENT EVIDENCE'
+  | 'SUSPICIOUS'
+  | 'INCONCLUSIVE'
+  | 'authentic'
+  | 'deepfake'
+  | 'morph'
+  | 'face-morph'
+  | 'morphed'
+  | 'suspicious'
+  | 'inconclusive'
+  | 'LIKELY_AUTHENTIC'
+  | 'LIKELY_AI_GENERATED'
+  | 'LIKELY_DEEPFAKE'
+  | 'LIKELY_MANIPULATED'
+  | 'LIKELY_MORPHED';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 export type MediaType = 'video' | 'image';
 export type AnalysisStatus = 'queued' | 'processing' | 'complete' | 'failed';

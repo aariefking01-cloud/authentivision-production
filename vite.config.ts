@@ -7,18 +7,18 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   server: {
     host: '0.0.0.0',
-    port: Number(process.env.PORT || 3000),
+    port: 3000,
     strictPort: true,
     allowedHosts: true,
   },
   preview: {
     host: '0.0.0.0',
-    port: Number(process.env.PORT || 3000),
+    port: 3000,
     strictPort: true,
   },
   build: {

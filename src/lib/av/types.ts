@@ -1,15 +1,37 @@
-export type Verdict = "AUTHENTIC" | "DEEPFAKE" | "FACE MORPHED" | "FACE MORP" | "SUSPICIOUS" | "INCONCLUSIVE" | "authentic" | "deepfake" | "morph" | "face-morph" | "morphed" | "suspicious" | "inconclusive" | "LIKELY_AUTHENTIC" | "LIKELY_AI_GENERATED" | "LIKELY_DEEPFAKE" | "LIKELY_MANIPULATED" | "LIKELY_MORPHED" | "INCONCLUSIVE";
-export type RiskLevel = "low" | "medium" | "high" | "critical";
-export type MediaKind = "video" | "image";
-export type AnalysisStatus = "queued" | "processing" | "complete" | "failed";
-export type Integrity = "verified" | "warning" | "changed" | "unknown";
-export type CaseStatus = "open" | "investigating" | "review" | "closed" | "archived";
-export type ServiceStatus = "operational" | "processing" | "degraded" | "offline";
+export type Verdict =
+  | 'AUTHENTIC'
+  | 'DEEPFAKE'
+  | 'FACE MORPHED'
+  | 'FACE MORP'
+  | 'MANIPULATED / SYNTHETIC'
+  | 'MANIPULATED'
+  | 'INSUFFICIENT EVIDENCE'
+  | 'SUSPICIOUS'
+  | 'INCONCLUSIVE'
+  | 'authentic'
+  | 'deepfake'
+  | 'morph'
+  | 'face-morph'
+  | 'morphed'
+  | 'suspicious'
+  | 'inconclusive'
+  | 'LIKELY_AUTHENTIC'
+  | 'LIKELY_AI_GENERATED'
+  | 'LIKELY_DEEPFAKE'
+  | 'LIKELY_MANIPULATED'
+  | 'LIKELY_MORPHED';
+
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+export type MediaKind = 'video' | 'image';
+export type AnalysisStatus = 'queued' | 'processing' | 'complete' | 'failed';
+export type Integrity = 'verified' | 'warning' | 'changed' | 'unknown';
+export type CaseStatus = 'open' | 'investigating' | 'review' | 'closed' | 'archived';
+export type ServiceStatus = 'operational' | 'processing' | 'degraded' | 'offline';
 
 export interface HumanReviewRecord {
   reviewedBy: string;
   reviewedAt: string;
-  decision: "confirmed" | "rejected" | "inconclusive";
+  decision: 'confirmed' | 'rejected' | 'inconclusive';
   notes: string;
 }
 
@@ -21,6 +43,7 @@ export interface SuspiciousRegion {
   height: number; // 0-100%
   signalType?: string;
   severity?: RiskLevel;
+  detectorName?: string;
 }
 
 export interface ProvenanceRecord {
@@ -30,6 +53,18 @@ export interface ProvenanceRecord {
   metadataAvailable: boolean;
   softwareUsed?: string;
   details?: string;
+}
+
+export interface ModelDetectorStatus {
+  modelId: string;
+  name: string;
+  version: string;
+  status: 'success' | 'unavailable' | 'error';
+  score: number;
+  confidence: number;
+  purpose: string;
+  calibrationMethod: string;
+  summary: string;
 }
 
 export interface ModelSignalsRecord {
@@ -45,10 +80,11 @@ export interface ModelSignalsRecord {
     score?: number | null;
   };
   provenanceCheck?: string;
+  registryStatus?: ModelDetectorStatus[];
 }
 
 export interface AgreementRecord {
-  level: "HIGH" | "MODERATE" | "LOW" | "CONFLICTING";
+  level: 'HIGH' | 'MODERATE' | 'LOW' | 'CONFLICTING';
   supportingSignals: number;
   conflictingSignals: number;
 }
@@ -57,6 +93,41 @@ export interface ClassificationBreakdown {
   aiGenerated: number; // 0.0 - 1.0
   manipulated: number; // 0.0 - 1.0
   authentic: number; // 0.0 - 1.0
+  insufficientEvidence?: number;
+}
+
+export interface StructuredForensicFinding {
+  id: string;
+  what: string;
+  where: string;
+  whichDetector: string;
+  howStrong: string;
+  confidence: number;
+  severity: RiskLevel;
+  limitations: string;
+}
+
+export interface PerFaceForensicData {
+  faceId: string;
+  faceIndex: number;
+  label: string;
+  boundingBox: { x: number; y: number; width: number; height: number };
+  qualityLevel: string;
+  morphScore: number;
+  deepfakeScore: number;
+  verdict: string;
+  confidence: number;
+  isManipulated: boolean;
+}
+
+export interface CrossFaceConsistencyData {
+  hasMultipleFaces: boolean;
+  faceCount: number;
+  lightingAgreementScore: number;
+  noiseConsistencyScore: number;
+  sharpnessConsistencyScore: number;
+  crossFaceAnomalyDetected: boolean;
+  inconsistencyDetails: string[];
 }
 
 export interface AnalysisRecord {
@@ -69,7 +140,7 @@ export interface AnalysisRecord {
   verdict: Verdict;
   confidence: number;
   uncertainty?: number;
-  quality?: "HIGH" | "MEDIUM" | "LOW" | "INSUFFICIENT";
+  quality?: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT';
   risk: RiskLevel;
   analyzedAt: string;
   status: AnalysisStatus;
@@ -105,6 +176,24 @@ export interface AnalysisRecord {
     submittedAt: string;
     comments?: string;
   };
+  // Advanced multi-face & layered forensic fields
+  perFaceResults?: PerFaceForensicData[];
+  crossFaceConsistency?: CrossFaceConsistencyData;
+  structuredFindings?: StructuredForensicFinding[];
+  detectorStatuses?: ModelDetectorStatus[];
+  metadataEvidence?: {
+    exifManipulated?: boolean;
+    encoderMismatch?: boolean;
+    softwareUsed?: string;
+    bitrateAnomaly?: boolean;
+  };
+  faceEvidence?: {
+    facesDetected?: number;
+    blendingSeamsScore?: number;
+    boundaryDiscontinuitySigma?: number;
+    eyeReflectanceAgreementScore?: number;
+    morphDistanceScore?: number;
+  };
 }
 
 export interface DetectionSignal {
@@ -118,7 +207,7 @@ export interface DetectionSignal {
 
 export interface TimelineMarker {
   t: number;
-  type: "face" | "temporal" | "compression" | "identity";
+  type: 'face' | 'temporal' | 'compression' | 'identity';
   score: number;
   frame: number;
 }
@@ -130,7 +219,7 @@ export interface CaseRecord {
   investigator: string;
   createdAt: string;
   updatedAt: string;
-  priority: "low" | "medium" | "high" | "critical";
+  priority: 'low' | 'medium' | 'high' | 'critical';
   status: CaseStatus;
   evidenceCount: number;
   analysisCount?: number;
@@ -148,7 +237,7 @@ export interface EvidenceRecord {
   addedAt: string;
   integrity: Integrity;
   caseId: string;
-  status: "sealed" | "in-analysis" | "released";
+  status: 'sealed' | 'in-analysis' | 'released';
 }
 
 export interface ReportRecord {
@@ -160,7 +249,7 @@ export interface ReportRecord {
   author: string;
   verdict: Verdict;
   confidence: number;
-  format: "PDF" | "JSON" | "CSV";
+  format: 'PDF' | 'JSON' | 'CSV';
   risk?: RiskLevel;
   generatedAt?: string;
   analyst?: string;
@@ -173,7 +262,7 @@ export interface ActivityEvent {
   action: string;
   resource: string;
   device: string;
-  result: "success" | "warning" | "denied";
+  result: 'success' | 'warning' | 'denied';
 }
 
 export interface SystemService {
@@ -184,9 +273,9 @@ export interface SystemService {
 }
 
 export interface AnalysisConfig {
-  mode: "auto" | "deepfake" | "morph" | "both";
-  depth: "fast" | "balanced" | "deep";
-  sampling: "10" | "15" | "30" | "adaptive";
+  mode: 'auto' | 'deepfake' | 'morph' | 'both';
+  depth: 'fast' | 'balanced' | 'deep';
+  sampling: '10' | '15' | '30' | 'adaptive';
   faceDetection: boolean;
   audioAnalysis: boolean;
   metadataAnalysis: boolean;

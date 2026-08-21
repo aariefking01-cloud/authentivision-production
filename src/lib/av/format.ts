@@ -1,73 +1,77 @@
-import type { RiskLevel, Verdict } from "./types";
+import type { RiskLevel, Verdict } from './types';
 
-export function normalizeVerdict(v: string): 'AUTHENTIC' | 'DEEPFAKE' | 'FACE MORPHED' | 'SUSPICIOUS' | 'INCONCLUSIVE' {
+export type NormalizedVerdict =
+  | 'AUTHENTIC'
+  | 'FACE MORPHED'
+  | 'DEEPFAKE'
+  | 'MANIPULATED / SYNTHETIC'
+  | 'INSUFFICIENT EVIDENCE';
+
+export function normalizeVerdict(v: string): NormalizedVerdict {
   const norm = (v || '').toUpperCase();
+  if (norm.includes('INSUFFICIENT') || norm.includes('INCONCLUSIVE')) return 'INSUFFICIENT EVIDENCE';
+  if (norm.includes('MORPH') || norm.includes('MORP') || norm.includes('BLEND') || norm.includes('FUSION')) return 'FACE MORPHED';
+  if (norm.includes('DEEPFAKE') || norm.includes('SWAP') || norm.includes('SYNTHETIC') || norm.includes('AI') || norm.includes('MANIPULATED') || norm.includes('GENERATED')) return 'DEEPFAKE';
   if (norm.includes('AUTHENTIC')) return 'AUTHENTIC';
-  if (norm.includes('MORPH') || norm.includes('MORP')) return 'FACE MORPHED';
-  if (norm.includes('DEEPFAKE') || norm.includes('AI_GENERATED') || norm.includes('SYNTHETIC')) return 'DEEPFAKE';
-  if (norm.includes('MANIPULATED') || norm.includes('SUSPICIOUS')) return 'FACE MORPHED';
-  if (norm.includes('INCONCLUSIVE')) return 'INCONCLUSIVE';
-  return 'INCONCLUSIVE';
+  return 'INSUFFICIENT EVIDENCE';
 }
 
 export function getVerdictTextColor(v: string): string {
   const verdict = normalizeVerdict(v);
   switch (verdict) {
-    case 'AUTHENTIC': return 'text-emerald-400';
-    case 'DEEPFAKE': return 'text-red-500';
-    case 'FACE MORPHED': return 'text-amber-400';
-    case 'SUSPICIOUS': return 'text-purple-400';
-    case 'INCONCLUSIVE': return 'text-slate-400';
+    case 'AUTHENTIC':
+      return 'text-emerald-400';
+    case 'FACE MORPHED':
+      return 'text-amber-400';
+    case 'DEEPFAKE':
+    case 'MANIPULATED / SYNTHETIC':
+      return 'text-red-400';
+    case 'INSUFFICIENT EVIDENCE':
+      return 'text-slate-400';
+  }
+}
+
+export function getVerdictBgColor(v: string): string {
+  const verdict = normalizeVerdict(v);
+  switch (verdict) {
+    case 'AUTHENTIC':
+      return 'bg-emerald-400/10 border-emerald-400/30 text-emerald-300';
+    case 'FACE MORPHED':
+      return 'bg-amber-400/10 border-amber-400/30 text-amber-300';
+    case 'DEEPFAKE':
+    case 'MANIPULATED / SYNTHETIC':
+      return 'bg-red-500/10 border-red-500/30 text-red-300';
+    case 'INSUFFICIENT EVIDENCE':
+      return 'bg-slate-500/10 border-slate-500/30 text-slate-300';
   }
 }
 
 export const VERDICT_LABEL: Record<string, string> = {
-  authentic: "AUTHENTIC",
-  deepfake: "DEEPFAKE",
-  morph: "FACE MORPHED",
-  "face-morph": "FACE MORPHED",
-  morphed: "FACE MORPHED",
-  suspicious: "FACE MORPHED",
-  inconclusive: "INCONCLUSIVE",
-  LIKELY_AUTHENTIC: "AUTHENTIC",
-  LIKELY_AI_GENERATED: "DEEPFAKE",
-  LIKELY_DEEPFAKE: "DEEPFAKE",
-  LIKELY_MANIPULATED: "FACE MORPHED",
-  LIKELY_MORPHED: "FACE MORPHED",
-  INCONCLUSIVE: "INCONCLUSIVE",
-  AUTHENTIC: "AUTHENTIC",
-  DEEPFAKE: "DEEPFAKE",
-  "FACE MORPHED": "FACE MORPHED",
-  "FACE MORP": "FACE MORPHED",
-  SUSPICIOUS: "FACE MORPHED",
-};
-
-export const VERDICT_SHORT: Record<string, string> = {
-  authentic: "AUTHENTIC",
-  deepfake: "DEEPFAKE",
-  morph: "FACE MORPHED",
-  "face-morph": "FACE MORPHED",
-  morphed: "FACE MORPHED",
-  suspicious: "FACE MORPHED",
-  inconclusive: "INCONCLUSIVE",
-  LIKELY_AUTHENTIC: "AUTHENTIC",
-  LIKELY_AI_GENERATED: "DEEPFAKE",
-  LIKELY_DEEPFAKE: "DEEPFAKE",
-  LIKELY_MANIPULATED: "FACE MORPHED",
-  LIKELY_MORPHED: "FACE MORPHED",
-  INCONCLUSIVE: "INCONCLUSIVE",
-  AUTHENTIC: "AUTHENTIC",
-  DEEPFAKE: "DEEPFAKE",
-  "FACE MORPHED": "FACE MORPHED",
-  "FACE MORP": "FACE MORPHED",
-  SUSPICIOUS: "FACE MORPHED",
+  AUTHENTIC: 'AUTHENTIC',
+  'FACE MORPHED': 'FACE MORPHED',
+  DEEPFAKE: 'DEEPFAKE',
+  'MANIPULATED / SYNTHETIC': 'DEEPFAKE',
+  'INSUFFICIENT EVIDENCE': 'INSUFFICIENT EVIDENCE',
+  authentic: 'AUTHENTIC',
+  deepfake: 'DEEPFAKE',
+  morph: 'FACE MORPHED',
+  'face-morph': 'FACE MORPHED',
+  morphed: 'FACE MORPHED',
+  suspicious: 'DEEPFAKE',
+  inconclusive: 'INSUFFICIENT EVIDENCE',
+  LIKELY_AUTHENTIC: 'AUTHENTIC',
+  LIKELY_AI_GENERATED: 'DEEPFAKE',
+  LIKELY_DEEPFAKE: 'DEEPFAKE',
+  LIKELY_MANIPULATED: 'DEEPFAKE',
+  LIKELY_MORPHED: 'FACE MORPHED',
+  INCONCLUSIVE: 'INSUFFICIENT EVIDENCE',
 };
 
 export const RISK_LABEL: Record<RiskLevel, string> = {
-  low: "Low",
-  medium: "Medium",
-  high: "High",
-  critical: "Critical",
+  low: 'Low Risk',
+  medium: 'Medium Risk',
+  high: 'High Risk',
+  critical: 'Critical Risk',
 };
 
 export function pct(n: number, digits = 1) {
@@ -81,7 +85,7 @@ export function shortHash(hash: string, size = 10) {
 export function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diff / 60000);
-  if (mins < 1) return "just now";
+  if (mins < 1) return 'just now';
   if (mins < 60) return `${mins} min ago`;
   const hours = Math.round(mins / 60);
   if (hours < 24) return `${hours} h ago`;
@@ -90,19 +94,11 @@ export function relativeTime(iso: string) {
 }
 
 export function formatDate(iso: string) {
-  return new Date(iso).toISOString().replace("T", " ").slice(0, 16) + " UTC";
+  return new Date(iso).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 }
 
 export function formatDuration(sec: number) {
   const m = Math.floor(sec / 60);
   const s = Math.round(sec % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-export function formatBytes(mb: number) {
-  return mb >= 1024 ? `${(mb / 1024).toFixed(2)} GB` : `${mb.toFixed(1)} MB`;
-}
-
-export function compactNumber(n: number) {
-  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
